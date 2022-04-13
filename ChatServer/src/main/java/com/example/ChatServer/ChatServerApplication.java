@@ -1,0 +1,68 @@
+package com.example.ChatServer;
+
+import com.example.ChatServer.models.ChatKeysModel;
+import com.example.ChatServer.models.ChatModel;
+import com.example.ChatServer.models.MessagesModel;
+import com.example.ChatServer.models.UserModel;
+import com.example.ChatServer.repos.RepoChatKeysModel;
+import com.example.ChatServer.repos.RepoChatModel;
+import com.example.ChatServer.repos.RepoMessageModel;
+import com.example.ChatServer.repos.RepoUserModel;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+
+@SpringBootApplication
+public class ChatServerApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ChatServerApplication.class, args);
+	}
+
+	@Bean
+	@Transactional
+	public CommandLineRunner addData(
+			RepoUserModel repoUserModel,
+			RepoMessageModel repoMessageModel,
+			RepoChatModel repoChatModel,
+			RepoChatKeysModel repoChatKeysModel
+	){
+		return args -> {
+			String pubKey="MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAwJbARb5O3N+1ZFJcjAlaokkjSUBvCw+9hQpg4+XkN2SvVUnQ38PI4MV6ghLFjSxZXDHq1yZ0wVZL+bYHhVAo6K6ulZ5SeoR2WurKfgFkwkC682u0wmCJIy9sas7YTlDTUDUokLuFRxtb3wLouCM9dK/iEbjR2Ezmee4c2hJug/FB77aPJmYpjr923waEKpiGvvlS/lAAKB0tNbV7EAf+jo74Qg7M2FWnG54AdOek5NGabhfv/iwpRI1Z9A18wGhQ/Q/cefoqSpVyc9RykiyUMG1O99SVYRQ5oGZ0Cg9ZtSTS3zDsAnk+TUicQl8Kov0WS1MJrQhNbcZTJRlK9uzgrn2Uw6vSLLZAT061jAgBmqcjuf4vBvZ6IvWs6ZOSgmWR66zlnJijx6Kka0a4/HJNz+T0rP7IMuri4hljW/1O+rD/WsPApdJGXwTdfErrorOxQSnICPtue7mB0igBLTHtMscITuS0NRmtbR0lbFUHLtFSvAqQVMKdYcTfOQftT2DothTXIfrh1Z/PAEXOj/G0Vy+Bm47a7QKCpgTHzozlkNwZcG9pDXd4QAEtDxgoCKQfICJunNNRmeUHaJ/zLa1LoWDPS+EvoorhhIdrS9J8VOhGI8kIhyXr4PDq4qmMqYNNMtT9qJwli2rXEimjZixxtB+pZqBeB5jOLzQ3Kwn5rj0CAwEAAQ==";
+			// this is the private key to this public key
+			//String privKey="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";
+			UserModel user1=new UserModel(0L, "user1", pubKey, "private_key1");
+			ChatModel chatModel1=new ChatModel(0L, "chat1");
+			ChatKeysModel chatKeysModel1= new ChatKeysModel(0L, "cheie_chat");
+			MessagesModel messagesModel1= new MessagesModel(0L, "encrypted_msg", LocalDateTime.now());
+
+			//Save user and chat name
+			user1=repoUserModel.save(user1);
+			chatModel1=repoChatModel.save(chatModel1);
+
+			// Bind the 2
+			user1.getChats().add(chatModel1);
+			user1.getChatsOwned().add(chatModel1);
+			chatModel1.getUsers().add(user1);
+			chatModel1.setOwner(user1);
+
+			// Update the db
+			repoUserModel.save(user1);
+
+
+			chatKeysModel1.setUser(user1);
+			chatKeysModel1.setChat(chatModel1);
+			chatKeysModel1= repoChatKeysModel.save(chatKeysModel1);
+
+			messagesModel1.setUser(user1);
+			messagesModel1.setChat(chatModel1);
+			messagesModel1=repoMessageModel.save(messagesModel1);
+
+			// Do not print random object (recursive reasons)
+		};
+	}
+}
