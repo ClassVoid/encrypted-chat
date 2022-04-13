@@ -23,10 +23,7 @@ public class Controller {
     private final ChatService chatService;
     private final IdentityService identityService;
 
-    @GetMapping("/api/hello")
-    LocalDateTime getHello(){
-        return LocalDateTime.now();
-    }
+    
 
     @GetMapping("/api/{chatName}/owner")
     ResponseEntity<?> getChatOwner(@PathVariable("chatName") String chatName){
