@@ -1,0 +1,12 @@
+
+Stream:
+    -the stream has a 10-11 seconds delay
+    -i must find a way to close the stream in a gentle manner
+    -do i stream to a single chat? 
+        is much easier to "just stream", whoever finds the stream key
+        gets to watch
+    -i could automatically send to current_chat the link to the stream 
+    -you need settings where you get to set the link to the streaming server along with the key
+
+
+  

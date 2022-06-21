@@ -12,6 +12,7 @@ import com.example.ChatServer.repos.RepoChatModel;
 import com.example.ChatServer.repos.RepoMessageModel;
 import com.example.ChatServer.repos.RepoUserModel;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,10 +31,19 @@ public class ChatService {
     private final RepoChatKeysModel repoChatKeysModel;
     private final IdentityService identityService;
 
-    public ResponseEntity<?> createChat(String chatName, String owner){
-        // Validate
+
+    public ResponseEntity<?> createChat(String chatName, String owner, UserEncrMessage userEncrMessage){
+
+        // validate identity
+        ResponseEntity<?> responseEntity=identityService.checkSecret(userEncrMessage);
+        if(responseEntity.getStatusCode()!=HttpStatus.OK)
+            return responseEntity;
+
+        // Validate data
         if(chatName!=null && chatName.length()>0 && owner!=null && owner.length()>0){
+
             Optional<UserModel> optionalUserModel=repoUserModel.findUserModelByUsername(owner);
+
             if(optionalUserModel.isEmpty())
                 return new ResponseEntity<>("ERROR, THE OWNER "+owner+" IS NOT REGISTERED", HttpStatus.NOT_FOUND);
 
@@ -42,9 +52,18 @@ public class ChatService {
             ChatModel chatModel=new ChatModel(0L, chatName);
             Optional<ChatModel> optionalChatModel= repoChatModel.findChatModelByChatName(chatName);
             if(optionalChatModel.isEmpty()) {
+
                 chatModel= repoChatModel.save(chatModel);
                 chatModel.setOwner(userModel);
                 repoChatModel.save(chatModel);
+                /*
+                userModel.getChats().add(chatModel);
+                userModel.getChatsOwned().add(chatModel);
+                chatModel.getUsers().add(userModel);
+                chatModel.setOwner(userModel);
+                repoUserModel.save(userModel);
+
+                 */
 
                 return new ResponseEntity<>(HttpStatus.CREATED);
             }else{
@@ -158,5 +177,30 @@ public class ChatService {
         repoChatModel.delete(chatModel);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    public ResponseEntity<?> getChatKey(String chatName, String username){
+        // Validate
+        if(chatName!=null && username!=null && chatName.length()>0 && username.length()>0){
+            Optional<UserModel> optionalUserModel=repoUserModel.findUserModelByUsername(username);
+
+            if(optionalUserModel.isEmpty())
+                return new ResponseEntity<>("ERROR, USER NOT FOUND", HttpStatus.NOT_FOUND);
+
+            Optional<ChatModel> optionalChatModel=repoChatModel.findChatModelByChatName(chatName);
+
+            if(optionalChatModel.isEmpty())
+                return new ResponseEntity<>("ERROR, CHAT NOT FOUND",HttpStatus.NOT_FOUND);
+
+
+            Optional<ChatKeysModel> optionalChatKeysModel=repoChatKeysModel
+                    .getChatKeysModelByChatAndUser(optionalChatModel.get(), optionalUserModel.get());
+
+            if(optionalChatKeysModel.isEmpty())
+                return new ResponseEntity<>("ERROR, KEY NOT FOUND",HttpStatus.NOT_FOUND);
+
+            return new ResponseEntity<>(optionalChatKeysModel.get().getEncryptedKey(),HttpStatus.OK);
+        }
+        return new ResponseEntity<>("ERROR, INVALID CHAT/USERNAME",HttpStatus.NOT_ACCEPTABLE);
     }
 }

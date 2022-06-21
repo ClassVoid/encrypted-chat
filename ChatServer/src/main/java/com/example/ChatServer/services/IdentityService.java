@@ -25,7 +25,7 @@ public class IdentityService {
     {
         HttpHeaders httpHeaders= new HttpHeaders();
         HttpEntity<UserEncrMessage> httpEntity= new HttpEntity<>(userEncrMessage, httpHeaders);
-        return restTemplate.exchange("http://localhost:8081/api/validation-test", HttpMethod.POST, httpEntity, String.class);
+        return restTemplate.exchange("http://127.0.0.1:8081/api/validation-test", HttpMethod.POST, httpEntity, String.class);
     }
 
     public ResponseEntity<?> getTicket(String username){
@@ -43,7 +43,7 @@ public class IdentityService {
             userPubKeyData.setPubKey(userModel.getPubKey());
             HttpEntity<UserPubKeyData> httpEntity = new HttpEntity<UserPubKeyData>(userPubKeyData, httpHeaders);
 
-            return restTemplate.exchange("http://localhost:8081/api/generate-secret", HttpMethod.POST, httpEntity, String.class);
+            return restTemplate.exchange("http://127.0.0.1:8081/api/generate-secret", HttpMethod.POST, httpEntity, String.class);
         } else
             return new ResponseEntity<>("ERROR, INCORRECT USERNAME",HttpStatus.BAD_REQUEST);
     }

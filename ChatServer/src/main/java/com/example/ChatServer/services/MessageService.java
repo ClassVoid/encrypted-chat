@@ -79,10 +79,18 @@ public class MessageService {
                 return new ResponseEntity<>("ERROR, AUTHOR NAME IS NULL",HttpStatus.NOT_ACCEPTABLE);
 
             if (optionalUserModel.isPresent() && optionalChatModel.isPresent()) {
+                UserModel userModel=optionalUserModel.get();
+                ChatModel chatModel=optionalChatModel.get();
+
+                // Check to see if the user is in the chat group
+                if(!chatModel.getUsers().contains(userModel))
+                    return new ResponseEntity<>("ERROR, THE USER "+userModel.getUsername()+" IS NOT PART OF THIS CHAT",
+                            HttpStatus.FORBIDDEN);
+
                 LocalDateTime dateTime=LocalDateTime.now();
                 MessagesModel messagesModel=new MessagesModel(0L, messageUploadData.getEncryptedMsg(), dateTime);
-                messagesModel.setUser(optionalUserModel.get());
-                messagesModel.setChat(optionalChatModel.get());
+                messagesModel.setUser(userModel);
+                messagesModel.setChat(chatModel);
                 repoMessageModel.save(messagesModel);
                 return new ResponseEntity<>(HttpStatus.CREATED);
             }

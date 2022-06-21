@@ -29,7 +29,7 @@ public class UserModel {
     @Column(nullable = false, length = 1024)
     private String pubKey;
 
-    @Column(nullable = false, length = 1024)
+    @Column(nullable = false, length = 8192)
     private String encryptedPriKey;
 
 

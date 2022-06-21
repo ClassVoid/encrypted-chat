@@ -23,9 +23,8 @@ public class Controller {
     private final ChatService chatService;
     private final IdentityService identityService;
 
-    
-
-    @GetMapping("/api/{chatName}/owner")
+    // Functional OK
+    @GetMapping("/api/chats/{chatName}/owner")
     ResponseEntity<?> getChatOwner(@PathVariable("chatName") String chatName){
         return chatService.getChatOwner(chatName);
     }
@@ -35,7 +34,7 @@ public class Controller {
             -Upload a message
             -Delete a message?? hard to prove you are the author
      */
-    // Functional
+    // Functional OK
     @GetMapping("/api/messages")
     ResponseEntity<?> getMessages(
             @RequestParam(name="chat_name") String chatName,
@@ -45,7 +44,7 @@ public class Controller {
         return messageService.getMessages(chatName, dateTime);
     }
 
-    // Functional
+    // Functional OK
     @PostMapping("/api/messages")
     ResponseEntity<?> uploadMessage(@RequestBody MessageUploadData messageUploadData)
     {
@@ -59,33 +58,51 @@ public class Controller {
             -Get a user's public key
      */
 
-    // Functional
+    // Functional OK
     @PostMapping("/api/users")
     ResponseEntity<?> createUser(@RequestBody UserData userData){
         return userService.createUser(userData);
     }
 
     // Functional
-    @GetMapping("/api/users/{username}")
+    @GetMapping("/api/users/{username}/public-key")
     ResponseEntity<?> getPublicKey(@PathVariable("username") String username){
         return userService.getPublicKey(username);
     }
 
+    @GetMapping("/api/chat-keys/{chatName}/{username}")
+    ResponseEntity<?> getChatKey(@PathVariable("chatName") String chatName,
+                                 @PathVariable("username") String username){
+        return chatService.getChatKey(chatName, username);
+    }
+
+    // Functional OK
+    @GetMapping("/api/users/{username}")
+    ResponseEntity<?> getUserData(@PathVariable("username") String username){
+        return userService.getUserData(username);
+    }
+
     /*
         Chats:
+            -Get all the chats the user has access to
             -Create a chat between you and other users
             -Add users to the chat
             -Remove a user from chat
      */
-
-    // Functional
-    @PostMapping("/api/chats/{chatName}/{username}")
-    ResponseEntity<?> createChat(@PathVariable("chatName") String chatName,
-                                 @PathVariable("username") String owner){
-        return chatService.createChat(chatName, owner);
+    @GetMapping("/api/chats/{username}")
+    ResponseEntity<?> getUserChats(@PathVariable("username") String username){
+        return userService.getUserChats(username);
     }
 
-    // Functional
+    // Functional OK
+    @PostMapping("/api/chats/{chatName}/{username}")
+    ResponseEntity<?> createChat(@PathVariable("chatName") String chatName,
+                                 @PathVariable("username") String owner,
+                                 @RequestBody UserEncrMessage userEncrMessage){
+        return chatService.createChat(chatName, owner, userEncrMessage);
+    }
+
+    // Functional OK
     @PostMapping("/api/chats/{chatName}/users")
     ResponseEntity<?> addUsers(@PathVariable("chatName") String chatName,
                                @RequestBody AddUsersData addUsersData){

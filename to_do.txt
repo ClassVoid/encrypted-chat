@@ -1,0 +1,46 @@
+Features to add:
+    -Delete account
+    -See the users from a chat
+    -Remove a user from a chat
+    
+Potential features:
+    -Self deleting messages(when sending the message you start a delete countdown)
+    -Upload a file
+    -LIVE VIDEO STREAM
+
+
+STREAM
+de preferat rtmp, hls e cam cuidat
+
+stream to rtmp://127.0.0.1:1935/show/{stream_name}
+
+get stream from rtmp://127.0.0.1/show/{stream_name}
+
+nginx commands start
+
+sudo /usr/local/nginx/sbin/nginx
+
+cd /usr/local/nginx/sbin
+
+sudo ./nginx -s reload
+
+NGINX config
+sudo nano /usr/local/nginx/conf/nginx.conf
+
+
+
+open OBS
+obs-studio
+
+
+
+
+WHEN STREAMING 
+    -you select a chat and press the button stream(perhaps there should be some streaming setting to do before)
+    -when you are done streaming you press stop streaiming and the stream ends
+
+WHEN WATCHING A STREAM
+    -you receive a link to a stream
+    -you press watch stream and insert the link in the popup window 
+    -the stream starts and you watch
+    -when you are done watching just cloe the window
