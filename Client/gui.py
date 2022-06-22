@@ -2,20 +2,23 @@ import sys
 import time
 
 import requests
+import re
+import socket
 from PyQt5 import QtWidgets, uic
+
 from PyQt5.QtCore import QObject, QThread, QRunnable, QThreadPool, pyqtSignal
 from workers import *
 
 
 class UI(QtWidgets.QMainWindow):
-    def __init__(self):
-        super(UI, self).__init__()
+    def __init__(self, parent=None):
+        super(UI, self).__init__(parent)
         uic.loadUi("chat_gui.ui", self)
         self.__extract_components()
         self.__configure_signals()
 
         self.can_get_msg = True
-        self.stream_on=False
+        self.stream_on = False
 
         self.show()
 
@@ -44,11 +47,12 @@ class UI(QtWidgets.QMainWindow):
         self.chat_list = self.page_2.findChild(QtWidgets.QListWidget, "listWidget")
         self.chat_browser = self.page_2.findChild(QtWidgets.QTextBrowser, "textBrowser")
         self.message_box = self.page_2.findChild(QtWidgets.QTextEdit, "textEdit")
-        self.stream_btn=self.page_2.findChild(QtWidgets.QPushButton, "pushButton_2")
+        self.stream_btn = self.page_2.findChild(QtWidgets.QPushButton, "pushButton_2")
+        self.watch_stream_btn = self.page_2.findChild(QtWidgets.QPushButton, "pushButton_4")
 
-        self.preferences_act=QtWidgets.QAction("Preferences", self)
-        self.findChild(QtWidgets.QMenuBar, "menubar")\
-            .findChild(QtWidgets.QMenu,"menuSettings")\
+        self.preferences_act = QtWidgets.QAction("Preferences", self)
+        self.findChild(QtWidgets.QMenuBar, "menubar") \
+            .findChild(QtWidgets.QMenu, "menuSettings") \
             .addAction(self.preferences_act)
         print(f"Preferances= {self.preferences_act}")
         # self.chat_list.addItem("chat_1")
@@ -69,7 +73,7 @@ class UI(QtWidgets.QMainWindow):
         self.chat_list.itemClicked.connect(self.__select_chat_pressed)
         self.stream_btn.clicked.connect(self.__stream_pressed)
         self.preferences_act.triggered.connect(self.__preferences_pressed)
-
+        self.watch_stream_btn.clicked.connect(self.__watch_stream_pressed)
 
     def __login_pressed(self):
         username = self.username_txt.text()
@@ -82,10 +86,10 @@ class UI(QtWidgets.QMainWindow):
         '''
         self.login_btn.setEnabled(False)
         self.login_thread = QThread()
-        self.login_worker = LoginWorker()
+        self.login_worker = LoginWorker(username, password)
         self.login_worker.moveToThread(self.login_thread)
 
-        self.login_thread.started.connect(lambda: self.login_worker.run(username, password))
+        self.login_thread.started.connect(self.login_worker.run)
         self.login_worker.finished.connect(self.login_thread.quit)
         self.login_worker.finished.connect(self.__login_callback)
 
@@ -105,22 +109,31 @@ class UI(QtWidgets.QMainWindow):
         '''
         print(res.status_code)
         # TO_DO add a try catch block, in case the password does not match
-        privateKey = decryptAES(f"{res.json()['encryptedPriKey']}", password)
+        if res.status_code==404:
+            QtWidgets.QMessageBox.critical(self, "Login Error", "Incorrect username")
+        elif res.status_code==503:
+            QtWidgets.QMessageBox.critical(self, "Server Error", "Seems that the server is unavailable")
+        else:
+            try:
+                privateKey = decryptAES(f"{res.json()['encryptedPriKey']}", password)
 
-        self.credentials: Dict[str, str] = {"username": f"{res.json()['username']}",
-                                            "pubKey": f"{res.json()['pubKey']}",
-                                            "PriKey": f"{privateKey}"}
+                self.credentials: Dict[str, str] = {"username": f"{res.json()['username']}",
+                                                    "pubKey": f"{res.json()['pubKey']}",
+                                                    "PriKey": f"{privateKey}"}
 
-        print(self.credentials)
-        if res.status_code == 200:
-            self.current_user.setText(self.credentials['username'])
-            self.send_btn.setEnabled(False)
-            self.add_user_btn.setEnabled(False)
-            self.delete_chat_btn.setEnabled(False)
-            self.stream_btn.setEnabled(False)
-            self.menuBar().setEnabled(True)
-            self._refresh_chats()
-            self._switch(1)
+                print(self.credentials)
+                if res.status_code == 200:
+                    self.current_user.setText(self.credentials['username'])
+                    self.send_btn.setEnabled(False)
+                    self.add_user_btn.setEnabled(False)
+                    self.delete_chat_btn.setEnabled(False)
+                    self.stream_btn.setEnabled(False)
+                    self.watch_stream_btn.setEnabled(True)
+                    self.menuBar().setEnabled(True)
+                    self._refresh_chats()
+                    self._switch(1)
+            except UnicodeDecodeError:
+                QtWidgets.QMessageBox.critical(self, "Login Error", "Incorrect password")
 
     def __create_user_pressed(self):
         username = self.username_txt.text()
@@ -132,10 +145,10 @@ class UI(QtWidgets.QMainWindow):
         '''
         self.create_user_btn.setEnabled(False)
         self.signup_thread = QThread()
-        self.signup_worker = SignUpWorker()
+        self.signup_worker = SignUpWorker(username, password)
 
         self.signup_worker.moveToThread(self.signup_thread)
-        self.signup_thread.started.connect(lambda: self.signup_worker.run(username, password))
+        self.signup_thread.started.connect(self.signup_worker.run)
         self.signup_worker.finished.connect(self.signup_thread.quit)
         self.signup_worker.finished.connect(self.__signup_callback)
         self.signup_worker.finished.connect(self.signup_worker.deleteLater)
@@ -150,6 +163,11 @@ class UI(QtWidgets.QMainWindow):
         :return:
         '''
         print(res)
+        if res.status_code==409:
+            QtWidgets.QMessageBox.critical(self, "Sign up Error", "Username is already taken")
+
+        if res.status_code==503:
+            QtWidgets.QMessageBox.critical(self, "Server Error", "Seems that the server is unavailable")
 
     def __new_chat_pressed(self):
         chat_name, ok = QtWidgets.QInputDialog().getText(self, "Create chat", "Enter chat name")
@@ -157,10 +175,10 @@ class UI(QtWidgets.QMainWindow):
             print(f"chat name is {chat_name}")
             self.new_chat_btn.setEnabled(False)
             self.new_chat_thread = QThread()
-            self.new_chat_worker = NewChatWorker()
+            self.new_chat_worker = NewChatWorker(self.credentials, chat_name)
             self.new_chat_worker.moveToThread(self.new_chat_thread)
 
-            self.new_chat_thread.started.connect(lambda: self.new_chat_worker.run(self.credentials, chat_name))
+            self.new_chat_thread.started.connect(self.new_chat_worker.run)
             self.new_chat_worker.finished.connect(self.new_chat_thread.quit)
             self.new_chat_worker.finished.connect(self.__new_chat_callback)
 
@@ -202,13 +220,17 @@ class UI(QtWidgets.QMainWindow):
         print("add user")
         username, ok = QtWidgets.QInputDialog().getText(self, "Add user", "Enter user name")
         # you should check if the user exists
-        addUser(self.credentials, username, self.current_chat.text())
+        try:
+            addUser(self.credentials, username, self.current_chat.text())
+        except:
+            QtWidgets.QMessageBox.critical(self, "Error", f"User {username} not found")
 
     def __logout_pressed(self):
-        # you could cleat the text boxes
+        # you could clear the text boxes
         self.current_chat.setText("No Chat Selected")
         self.message_box.setText("")
         self.chat_browser.setText("")
+        self._close_stream()
         self.menuBar().setEnabled(False)
         self._switch(0)
 
@@ -238,8 +260,8 @@ class UI(QtWidgets.QMainWindow):
         self.add_user_btn.setEnabled(True)
         self.stream_btn.setEnabled(True)
 
-        owner_name=getChatOwner(item.text()).text
-        if owner_name==self.credentials['username']:
+        owner_name = getChatOwner(item.text()).text
+        if owner_name == self.credentials['username']:
             self.delete_chat_btn.setEnabled(True)
         else:
             self.delete_chat_btn.setEnabled(False)
@@ -255,13 +277,67 @@ class UI(QtWidgets.QMainWindow):
 
     def __stream_pressed(self):
         print("Stream Started")
-        self.stream_on=not self.stream_on
+        self.stream_on = not self.stream_on
 
         if self.stream_on:
-            self.stream_btn.setText("Stop Stream")
+            ip_address = socket.gethostbyname(socket.gethostname())
+            default_server_address = f"rtmp://{ip_address}:1935/show/{self.credentials['username']}"
+            input_server_address, ok = QtWidgets. \
+                QInputDialog.getText(self,
+                                     "Start streaming",
+                                     "Insert the RTMP stream server IPv4 address\nBy default is the local address")
+            server_address = ""
+            if ok:
+                if len(input_server_address) == 0 \
+                        or re.search("^rtmp://\d+\.\d+\.\d+\.\d+:\d+/\w+/\w+$", input_server_address) is None:
+                    server_address = default_server_address
+                else:
+                    server_address = input_server_address
+                print(f"streaming to\t{server_address}")
+                # send the address to the current chat
+                sendMessage(self.credentials['username'], self.current_chat.text(),
+                            self.chat_key, f"{self.credentials['username']} is streaming on {server_address}")
+                self._update_chat()
+
+                QtWidgets.QMessageBox.about(self, "Stream Info", f"The stream will start on address\n{server_address}")
+
+                # self.watch_stream_btn.setEnabled(False)
+                self.stream_btn.setText("Stop Stream")
+                self.stream_thread = QThread()
+                self.stream_worker = StreamSenderWorker(server_address)
+                self.stream_worker.moveToThread(self.stream_thread)
+
+                self.stream_thread.started.connect(self.stream_worker.run)
+                self.stream_worker.finished.connect(self.stream_thread.quit)
+                self.stream_worker.finished.connect(self.stream_worker.deleteLater)
+                self.stream_thread.finished.connect(self.stream_thread.deleteLater)
+
+                self.stream_thread.start()
         else:
             self.stream_btn.setText("Start Stream")
+            self.stream_worker.stop()
+            # self.watch_stream_btn.setEnabled(True)
 
+    def __watch_stream_pressed(self):
+        print("Watch stream")
+        # text dialog box popup
+        # !!! CHECK IF THE INPUT IS AN ADDRESS
+        stream_address, ok = QtWidgets.QInputDialog.getText(self, "Connect to Stream",
+                                                            "Insert the RTMP stream server IPv4 address")
+
+        if ok and re.search("^rtmp://\d+\.\d+\.\d+\.\d+:\d+/\w+/\w+$", stream_address) is not None:
+            self.watch_stream_btn.setEnabled(False)
+            self.watch_stream_thread = QThread()
+            self.watch_stream_worker = StreamConsumerWorker(stream_address)
+            self.watch_stream_worker.moveToThread(self.watch_stream_thread)
+
+            self.watch_stream_thread.started.connect(self.watch_stream_worker.run)
+            self.watch_stream_worker.finished.connect(self.watch_stream_thread.quit)
+            self.watch_stream_worker.finished.connect(self.watch_stream_worker.deleteLater)
+            self.watch_stream_thread.finished.connect(self.watch_stream_thread.deleteLater)
+            self.watch_stream_thread.finished.connect(lambda: self.watch_stream_btn.setEnabled(True))
+
+            self.watch_stream_thread.start()
 
     def __preferences_pressed(self):
         print("preferences")
@@ -295,11 +371,31 @@ class UI(QtWidgets.QMainWindow):
     def _switch(self, index):
         self.stacked_widget.setCurrentIndex(index)
 
+    def _close_stream(self):
+        if hasattr(self, 'stream_worker') and self.stream_on:
+            self.stream_worker.stop()
+            self.stream_on = False
+
+        if hasattr(self, 'watch_stream_worker'):
+            self.watch_stream_worker.stop()
+
+    def closeEvent(self, event):
+        reply = QtWidgets.QMessageBox.question(self, 'Window Close', 'Are you sure you want to close the window?',
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
+
+        if reply == QtWidgets.QMessageBox.Yes:
+            self._close_stream()
+            event.accept()
+        else:
+            event.ignore()
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
     window = UI()
-    app.exec_()
+    window.show()
+    sys.exit(app.exec_())
 
 
 main()

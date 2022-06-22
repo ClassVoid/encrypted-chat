@@ -234,6 +234,9 @@ def addUser(credentials: Dict[str, str], username: str, chatName: str) -> reques
         chatKeyEncr = getChatKey(credentials['username'], chatName)
         chatKey = decryptRSA(chatKeyEncr, credentials['PriKey'])
         user_credentials = getUserData(username)
+        print(f"user credentials {user_credentials.status_code}")
+        if user_credentials.status_code==404:
+            raise Exception()
         chatPasswordEncr = encryptRSA(chatKey, user_credentials.json()['pubKey'])
 
     userData = {"username": username,

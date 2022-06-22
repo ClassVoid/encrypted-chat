@@ -6,7 +6,7 @@ Features to add:
 Potential features:
     -Self deleting messages(when sending the message you start a delete countdown)
     -Upload a file
-    -LIVE VIDEO STREAM
+    -LIVE VIDEO STREAM  done
 
 
 STREAM
@@ -43,4 +43,7 @@ WHEN WATCHING A STREAM
     -you receive a link to a stream
     -you press watch stream and insert the link in the popup window 
     -the stream starts and you watch
-    -when you are done watching just cloe the window
+    -when you are done watching just close the window
+
+
+

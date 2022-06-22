@@ -1,7 +1,5 @@
 
 Stream:
-    -the stream has a 10-11 seconds delay
-    -i must find a way to close the stream in a gentle manner
     -do i stream to a single chat? 
         is much easier to "just stream", whoever finds the stream key
         gets to watch
@@ -9,4 +7,37 @@ Stream:
     -you need settings where you get to set the link to the streaming server along with the key
 
 
-  
+
+Bugs:
+    - Logout when streaming? Fixed
+    
+    - Daca serverul(user server) nu este disponibil trebuie sa generez o eroare! Fixed for login
+
+    - Should I handle the unavailable server error even after I log in?
+
+    
+
+TO_DO:
+    -send the stream link to the current chat (2/10)    done
+
+    -see a list of users that belong to a chat(5/10)
+
+    -if you are the owner you can delete a user from the chat(8/10)
+
+    -delete account and all your messages from all the chats,THE RIGHT TO BE FORGOTTEN(6/10)
+
+
+Questions:
+    - Ar trebui sa ma concentrez pe partea de tratare a erorilor
+    - Este de interes eliminarea unui user din chat?
+    - Este necesar ca utilizator care face stream sa se vada pe sine?
+        apare problema in care o resursa este utilizata de >2  aplicatii
+        se poate crea o resursa virtuala(dar imi complic existenta)
+
+    - Apare un deay intre sunet si imagine, este o problema semnificativa?
+    
+    
+
+
+ 
+
