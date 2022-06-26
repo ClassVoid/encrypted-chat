@@ -70,6 +70,12 @@ public class Controller {
         return userService.getPublicKey(username);
     }
 
+    @DeleteMapping("/api/users/{username}")
+    ResponseEntity<?> deleteUser(@PathVariable("username") String username,
+                                 @RequestBody UserEncrMessage userEncrMessage){
+        return userService.deleteUser(username, userEncrMessage);
+    }
+
     @GetMapping("/api/chat-keys/{chatName}/{username}")
     ResponseEntity<?> getChatKey(@PathVariable("chatName") String chatName,
                                  @PathVariable("username") String username){
@@ -109,6 +115,13 @@ public class Controller {
         return chatService.addUsers(chatName, addUsersData);
     }
     // Functional
+    @GetMapping("/api/chats/{chatName}/users")
+    ResponseEntity<?> getChatUsers(@PathVariable("chatName") String chatName,
+                                   @RequestBody UserEncrMessage userEncrMessage){
+        return chatService.getChatUsers(chatName, userEncrMessage);
+    }
+
+    // Functional
     @DeleteMapping("/api/chats/{chatName}")
     ResponseEntity<?> deleteChat(@PathVariable("chatName") String chatName,
                                  @RequestBody UserEncrMessage userEncrMessage){
@@ -119,4 +132,6 @@ public class Controller {
     ResponseEntity<?> getTicket(@PathVariable("username") String username){
         return identityService.getTicket(username);
     }
+
+
 }

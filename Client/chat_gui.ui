@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1134</width>
-    <height>830</height>
+    <width>1160</width>
+    <height>825</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
      <rect>
       <x>-10</x>
       <y>0</y>
-      <width>1111</width>
+      <width>1141</width>
       <height>771</height>
      </rect>
     </property>
@@ -191,8 +191,8 @@
      <widget class="QPushButton" name="pushButton_8">
       <property name="geometry">
        <rect>
-        <x>1020</x>
-        <y>60</y>
+        <x>1030</x>
+        <y>50</y>
         <width>86</width>
         <height>26</height>
        </rect>
@@ -280,6 +280,60 @@
        <string>Watch Stream</string>
       </property>
      </widget>
+     <widget class="QListWidget" name="listWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>1020</x>
+        <y>140</y>
+        <width>121</width>
+        <height>471</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>1020</x>
+        <y>120</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Users</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_11">
+      <property name="geometry">
+       <rect>
+        <x>900</x>
+        <y>50</y>
+        <width>111</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Delete Account</string>
+      </property>
+     </widget>
+     <zorder>label_4</zorder>
+     <zorder>pushButton_5</zorder>
+     <zorder>label_3</zorder>
+     <zorder>textBrowser</zorder>
+     <zorder>textEdit</zorder>
+     <zorder>pushButton_6</zorder>
+     <zorder>pushButton_7</zorder>
+     <zorder>pushButton_8</zorder>
+     <zorder>pushButton_9</zorder>
+     <zorder>listWidget</zorder>
+     <zorder>pushButton_2</zorder>
+     <zorder>pushButton_4</zorder>
+     <zorder>listWidget_2</zorder>
+     <zorder>label_5</zorder>
+     <zorder>pushButton_11</zorder>
     </widget>
    </widget>
   </widget>
@@ -291,7 +345,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1134</width>
+     <width>1160</width>
      <height>22</height>
     </rect>
    </property>

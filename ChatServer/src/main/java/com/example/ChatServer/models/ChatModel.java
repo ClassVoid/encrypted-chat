@@ -34,7 +34,7 @@ public class ChatModel {
     private List<MessagesModel> messages=new ArrayList<>();
 
     @JsonIgnore
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinTable(name = "chat_user", joinColumns = { @JoinColumn(name = "chat_id")}, inverseJoinColumns = {@JoinColumn(name = "user_id")})
     private List<UserModel> users = new ArrayList<>();
 

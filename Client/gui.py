@@ -1,18 +1,18 @@
-import sys
-import time
-
-import requests
 import re
 import socket
-from PyQt5 import QtWidgets, uic
+import sys
 
-from PyQt5.QtCore import QObject, QThread, QRunnable, QThreadPool, pyqtSignal
+from PyQt5 import QtWidgets, uic
+from PyQt5.QtCore import QThread, QEvent, Qt
+
 from workers import *
 
 
-class UI(QtWidgets.QMainWindow):
+class UI(QtWidgets.QMainWindow, QObject):
     def __init__(self, parent=None):
-        super(UI, self).__init__(parent)
+        # super(UI, self).__init__(parent)
+        QtWidgets.QMainWindow.__init__(self)
+        QObject.__init__(self)
         uic.loadUi("chat_gui.ui", self)
         self.__extract_components()
         self.__configure_signals()
@@ -49,6 +49,8 @@ class UI(QtWidgets.QMainWindow):
         self.message_box = self.page_2.findChild(QtWidgets.QTextEdit, "textEdit")
         self.stream_btn = self.page_2.findChild(QtWidgets.QPushButton, "pushButton_2")
         self.watch_stream_btn = self.page_2.findChild(QtWidgets.QPushButton, "pushButton_4")
+        self.chat_users_list = self.page_2.findChild(QtWidgets.QListWidget, "listWidget_2")
+        self.delete_account_btn = self.page_2.findChild(QtWidgets.QPushButton, "pushButton_11")
 
         self.preferences_act = QtWidgets.QAction("Preferences", self)
         self.findChild(QtWidgets.QMenuBar, "menubar") \
@@ -74,6 +76,9 @@ class UI(QtWidgets.QMainWindow):
         self.stream_btn.clicked.connect(self.__stream_pressed)
         self.preferences_act.triggered.connect(self.__preferences_pressed)
         self.watch_stream_btn.clicked.connect(self.__watch_stream_pressed)
+        self.chat_users_list.itemClicked.connect(self.__select_user_pressed)
+        self.delete_account_btn.clicked.connect(self.__delete_account_pressed)
+        self.message_box.installEventFilter(self)
 
     def __login_pressed(self):
         username = self.username_txt.text()
@@ -109,9 +114,9 @@ class UI(QtWidgets.QMainWindow):
         '''
         print(res.status_code)
         # TO_DO add a try catch block, in case the password does not match
-        if res.status_code==404:
+        if res.status_code == 404:
             QtWidgets.QMessageBox.critical(self, "Login Error", "Incorrect username")
-        elif res.status_code==503:
+        elif res.status_code == 503:
             QtWidgets.QMessageBox.critical(self, "Server Error", "Seems that the server is unavailable")
         else:
             try:
@@ -163,10 +168,10 @@ class UI(QtWidgets.QMainWindow):
         :return:
         '''
         print(res)
-        if res.status_code==409:
+        if res.status_code == 409:
             QtWidgets.QMessageBox.critical(self, "Sign up Error", "Username is already taken")
 
-        if res.status_code==503:
+        if res.status_code == 503:
             QtWidgets.QMessageBox.critical(self, "Server Error", "Seems that the server is unavailable")
 
     def __new_chat_pressed(self):
@@ -195,6 +200,8 @@ class UI(QtWidgets.QMainWindow):
             if add_user_res.status_code == 201:
                 # make it async
                 self._refresh_chats()
+        elif res.status_code == 409:
+            QtWidgets.QMessageBox.critical(self, "ERROR, CREATE CHAT", res.text)
 
     def _refresh_chats(self):
         chats_res = getUserChats(self.credentials)
@@ -220,10 +227,12 @@ class UI(QtWidgets.QMainWindow):
         print("add user")
         username, ok = QtWidgets.QInputDialog().getText(self, "Add user", "Enter user name")
         # you should check if the user exists
-        try:
-            addUser(self.credentials, username, self.current_chat.text())
-        except:
-            QtWidgets.QMessageBox.critical(self, "Error", f"User {username} not found")
+        if ok:
+            try:
+                addUser(self.credentials, username, self.current_chat.text())
+                self._update_user_list()
+            except:
+                QtWidgets.QMessageBox.critical(self, "Error", f"User {username} not found")
 
     def __logout_pressed(self):
         # you could clear the text boxes
@@ -231,6 +240,8 @@ class UI(QtWidgets.QMainWindow):
         self.message_box.setText("")
         self.chat_browser.setText("")
         self._close_stream()
+        self.chat_users_list.clear()
+        self.chat_list.clear()
         self.menuBar().setEnabled(False)
         self._switch(0)
 
@@ -243,10 +254,23 @@ class UI(QtWidgets.QMainWindow):
         deleteChat(self.credentials, self.current_chat.text())
         self.chat_browser.setText("")
         self.current_chat.setText("No Chat Selected")
+        self.chat_users_list.clear()
         self.send_btn.setEnabled(False)
         self.delete_chat_btn.setEnabled(False)
         self.add_user_btn.setEnabled(False)
         self._refresh_chats()
+
+    def __delete_account_pressed(self):
+        reply = QtWidgets.QMessageBox.question(self, "Delete Account", "Are you sure you want to delete your account?",
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            print("Your account will be deleted")
+
+            # send the delete request to the server
+            deleteAccount(self.credentials)
+
+            self.__logout_pressed()
 
     def __select_chat_pressed(self, item):
         # save the current chat
@@ -273,7 +297,11 @@ class UI(QtWidgets.QMainWindow):
         self.chat_key = decryptRSA(encrypted_key, self.credentials['PriKey'])
 
         self._update_chat()
+        self._update_user_list()
         self.chat_list.setEnabled(True)
+
+    def __select_user_pressed(self, item):
+        print(f"user {item.text()} selected")
 
     def __stream_pressed(self):
         print("Stream Started")
@@ -368,6 +396,18 @@ class UI(QtWidgets.QMainWindow):
 
         self.chat_browser.setText(chat_text)
 
+    def _update_user_list(self):
+        # ideal ar fi sa utilizez workeri
+        chat_name = self.current_chat.text()
+
+        try:
+            user_list = updateUserList(self.credentials, chat_name).json()
+            self.chat_users_list.clear()
+            for username in user_list:
+                self.chat_users_list.addItem(username)
+        except:
+            QtWidgets.QMessageBox.critical(self, "Error", "Something went wrong when acquiring the user list")
+
     def _switch(self, index):
         self.stacked_widget.setCurrentIndex(index)
 
@@ -389,6 +429,15 @@ class UI(QtWidgets.QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def eventFilter(self, obj, event) -> bool:
+        if obj is self.message_box \
+                and event.type() == QEvent.Type.KeyPress \
+                and event.key() == Qt.Key_Return:
+            self.__send_pressed()
+            return True
+
+        return super(UI, self).eventFilter(obj, event)
 
 
 def main():

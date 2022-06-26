@@ -12,8 +12,18 @@ from Crypto.Random import get_random_bytes
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 
+
+# Loading the configuration
+
+with open("client_conf.json") as config:
+    client_config=json.load(open("client_conf.json"))
+    server_url=f"{client_config['server_address']}:{client_config['server_port']}/{client_config['server_endpoint']}"
+'''
 server_port = "8080"
 server_url = f"http://127.0.0.1:{server_port}/api"
+'''
+
+
 
 
 def generateCredentials(username: str, password: str):
@@ -235,7 +245,7 @@ def addUser(credentials: Dict[str, str], username: str, chatName: str) -> reques
         chatKey = decryptRSA(chatKeyEncr, credentials['PriKey'])
         user_credentials = getUserData(username)
         print(f"user credentials {user_credentials.status_code}")
-        if user_credentials.status_code==404:
+        if user_credentials.status_code == 404:
             raise Exception()
         chatPasswordEncr = encryptRSA(chatKey, user_credentials.json()['pubKey'])
 
@@ -262,3 +272,24 @@ def deleteChat(credentials: Dict[str, str], chatName: str) -> requests.Response.
     print(res.status_code)
     print(res.text)
     return res
+
+
+def updateUserList(credentials: Dict[str, str], chatName: str) -> requests.Response.__class__:
+    data = getIdentityTicket(credentials)
+    headers = {"Content-Type": "application/json"}
+
+    res = requests.get(f"{server_url}/chats/{chatName}/users", json=data, headers=headers)
+
+    print(res.status_code)
+    print(res.text)
+    return res
+
+
+def deleteAccount(credentials: Dict[str, str]) -> requests.Response.__class__:
+    data = getIdentityTicket(credentials)
+    headers = {"Content-Type": "application/json"}
+
+    res = requests.delete(f"{server_url}/users/{credentials['username']}", json=data, headers=headers)
+
+    print(res.status_code)
+    print(res.text)

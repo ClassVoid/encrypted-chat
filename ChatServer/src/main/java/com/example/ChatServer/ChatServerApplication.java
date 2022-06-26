@@ -23,6 +23,7 @@ public class ChatServerApplication {
 		SpringApplication.run(ChatServerApplication.class, args);
 	}
 
+	/*
 	@Bean
 	@Transactional
 	public CommandLineRunner addData(
@@ -65,4 +66,6 @@ public class ChatServerApplication {
 			// Do not print random object (recursive reasons)
 		};
 	}
+
+	 */
 }

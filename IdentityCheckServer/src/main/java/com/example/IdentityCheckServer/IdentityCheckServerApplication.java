@@ -14,7 +14,7 @@ public class IdentityCheckServerApplication {
 		SpringApplication.run(IdentityCheckServerApplication.class, args);
 	}
 
-
+/*
 	@Bean
 	public CommandLineRunner addTicket(RepoTicket repoTicket){
 		return args -> {
@@ -23,4 +23,6 @@ public class IdentityCheckServerApplication {
 			repoTicket.save(ticketModel1);
 		};
 	}
+
+	*/
 }

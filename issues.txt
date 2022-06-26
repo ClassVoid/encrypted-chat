@@ -15,17 +15,36 @@ Bugs:
 
     - Should I handle the unavailable server error even after I log in?
 
-    
+    - Dintr-un motiv necunoscut delete account sterge toti userii dintr-un chat detinut de un anumit user
+        * are de a face cu stergerea userului la final  Fixed
+
+    - Numele unui chat trebuie sa fie unic  Fixed
+
+    - cand utilizezi un token tot timpul trebuie sa il validezi mai intai apoi continui operatia    Fixed
+
+    - cand scriu un mesaj si apas enter vreau sa se trimita mesajul     Fixed
 
 TO_DO:
     -send the stream link to the current chat (2/10)    done
 
-    -see a list of users that belong to a chat(5/10)
+    -see a list of users that belong to a chat(5/10)    done
 
     -if you are the owner you can delete a user from the chat(8/10)
+        ! chiar daca schimb cheia chatului, mesajele criptate cu vechea cheie vor fi pierdute
+        
 
-    -delete account and all your messages from all the chats,THE RIGHT TO BE FORGOTTEN(6/10)
+    -delete account and all your messages from all the chats,THE RIGHT TO BE FORGOTTEN(6/10) done
+        -> merge pentru ca mesajele sunt toate intr-o singura tabela, sterg mesajele care il au pe user ca si autor
 
+Upon finishing to do:
+
+    - if you use a configuration file only, remove the settings from the bar
+
+    - when you type the password you should not see the text
+
+    - remove from the login input(username/password) the text after you login
+
+    - remove the information logging from the client side
 
 Questions:
     - Ar trebui sa ma concentrez pe partea de tratare a erorilor

@@ -1,13 +1,20 @@
 package com.example.ChatServer.services;
 
 import com.example.ChatServer.data.UserData;
+import com.example.ChatServer.data.UserEncrMessage;
+import com.example.ChatServer.models.ChatKeysModel;
 import com.example.ChatServer.models.ChatModel;
+import com.example.ChatServer.models.MessagesModel;
 import com.example.ChatServer.models.UserModel;
+import com.example.ChatServer.repos.RepoChatKeysModel;
+import com.example.ChatServer.repos.RepoChatModel;
+import com.example.ChatServer.repos.RepoMessageModel;
 import com.example.ChatServer.repos.RepoUserModel;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +23,10 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class UserService {
+    private final RepoChatModel repoChatModel;
     private final RepoUserModel repoUserModel;
+    private final IdentityService identityService;
+
 
     public ResponseEntity<?> createUser(UserData userData){
 
@@ -78,5 +88,34 @@ public class UserService {
 
         }else
             return new ResponseEntity<>("ERROR, USERNAME IS NULL", HttpStatus.BAD_REQUEST);
+    }
+
+
+    @Transactional
+    public ResponseEntity<?> deleteUser(String username, UserEncrMessage userEncrMessage){
+        // check validity
+        ResponseEntity<?> responseEntity=identityService.checkSecret(userEncrMessage);
+        if (responseEntity.getStatusCode()!=HttpStatus.OK)
+            return responseEntity;
+
+        if(username==null || username.length()==0)
+            return new ResponseEntity<>("ERROR, INVALID USERNAME", HttpStatus.BAD_REQUEST);
+
+        Optional<UserModel> optionalUserModel=repoUserModel.findUserModelByUsername(username);
+        if(optionalUserModel.isEmpty())
+            return new ResponseEntity<>("ERROR, USERNAME NOT FOUND", HttpStatus.NOT_FOUND);
+
+        UserModel userModel=optionalUserModel.get();
+        repoChatModel.deleteAllByOwner(userModel);
+
+        // remove him from other chats
+        List<ChatModel> chatModelList=userModel.getChats();
+        chatModelList.forEach(chatModel -> chatModel.getUsers().remove(userModel));
+
+        // finally remove the user
+
+        repoUserModel.deleteById(userModel.getId());
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

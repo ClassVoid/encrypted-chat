@@ -43,7 +43,7 @@ public class UserModel {
     private List<MessagesModel> messages=new ArrayList<>();
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     private List<ChatModel> chats=new ArrayList<>();
 
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

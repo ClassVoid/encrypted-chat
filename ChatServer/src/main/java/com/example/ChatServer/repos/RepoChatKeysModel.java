@@ -11,5 +11,6 @@ import java.util.Optional;
 @Repository
 public interface RepoChatKeysModel extends JpaRepository<ChatKeysModel, Long> {
     void deleteAllByChat_Id(Long chatId);
+    void deleteAllByUser(UserModel userModel);
     Optional<ChatKeysModel> getChatKeysModelByChatAndUser(ChatModel chatModel, UserModel userModel);
 }

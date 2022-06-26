@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -108,15 +109,18 @@ public class ChatService {
             // Iterate through the users and add them to the chat and update their keys
             ChatModel chatModel=optionalChatModel.get();
             for(int i=0; i<userModelList.size();i++){
-                // Bind chat and user
-                userModelList.get(i).getChats().add(chatModel);
-                chatModel.getUsers().add(userModelList.get(i));
-                repoUserModel.save(userModelList.get(i));
-                // Add the key
-                ChatKeysModel chatKeysModel=new ChatKeysModel(0L, addUsersData.getAddUserDataList().get(i).getEncryptedKey());
-                chatKeysModel.setUser(userModelList.get(i));
-                chatKeysModel.setChat(chatModel);
-                repoChatKeysModel.save(chatKeysModel);
+                // Check to see if the user is already added
+                if(!userModelList.get(i).getChats().contains(chatModel)) {
+                    // Bind chat and user
+                    userModelList.get(i).getChats().add(chatModel);
+                    chatModel.getUsers().add(userModelList.get(i));
+                    repoUserModel.save(userModelList.get(i));
+                    // Add the key
+                    ChatKeysModel chatKeysModel = new ChatKeysModel(0L, addUsersData.getAddUserDataList().get(i).getEncryptedKey());
+                    chatKeysModel.setUser(userModelList.get(i));
+                    chatKeysModel.setChat(chatModel);
+                    repoChatKeysModel.save(chatKeysModel);
+                }
             }
             return new ResponseEntity<>(HttpStatus.CREATED);
         }else
@@ -202,5 +206,32 @@ public class ChatService {
             return new ResponseEntity<>(optionalChatKeysModel.get().getEncryptedKey(),HttpStatus.OK);
         }
         return new ResponseEntity<>("ERROR, INVALID CHAT/USERNAME",HttpStatus.NOT_ACCEPTABLE);
+    }
+
+    public ResponseEntity<?> getChatUsers(String chatName, UserEncrMessage userEncrMessage){
+        ResponseEntity<?> responseEntity=identityService.checkSecret(userEncrMessage);
+        if(responseEntity.getStatusCode()==HttpStatus.OK){
+
+            if(chatName!=null && chatName.length()>0){
+                 // verific daca exista chatul cu numele respectiv
+                Optional<ChatModel> optionalChatModel=repoChatModel.findChatModelByChatName(chatName);
+
+                if(optionalChatModel.isPresent()) {
+                    // extrag numele utilizatorilor din acel chat intr-o lista
+                    ChatModel chatModel=optionalChatModel.get();
+                    List<String> chatUsers=chatModel.getUsers().stream().map(UserModel::getUsername).collect(Collectors.toList());
+                    // verific daca utilizatorul face parte din lista
+                    if(!chatUsers.contains(userEncrMessage.getUsername()))
+                        return new ResponseEntity<>("ERROR, YOU MUST BE PART OF THE CHAT", HttpStatus.FORBIDDEN);
+                    // trimit lista
+                    return new ResponseEntity<List<String>>(chatUsers, HttpStatus.OK);
+                }
+                else
+                    return new ResponseEntity<>("ERROR, CHAT NOT FOUND", HttpStatus.NOT_FOUND);
+            }
+            else
+                return new ResponseEntity<>("ERROR, CHAT NAME IS NULL", HttpStatus.NOT_ACCEPTABLE);
+        }
+        else return responseEntity;
     }
 }
