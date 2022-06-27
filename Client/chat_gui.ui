@@ -27,7 +27,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="page">
      <widget class="QWidget" name="layoutWidget">
@@ -77,8 +77,8 @@
      <widget class="QPushButton" name="pushButton_3">
       <property name="geometry">
        <rect>
-        <x>510</x>
-        <y>350</y>
+        <x>470</x>
+        <y>400</y>
         <width>86</width>
         <height>26</height>
        </rect>
@@ -90,8 +90,8 @@
      <widget class="QPushButton" name="pushButton">
       <property name="geometry">
        <rect>
-        <x>400</x>
-        <y>350</y>
+        <x>470</x>
+        <y>340</y>
         <width>86</width>
         <height>26</height>
        </rect>
@@ -145,6 +145,9 @@
         <height>491</height>
        </rect>
       </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(179, 179, 179);</string>
+      </property>
      </widget>
      <widget class="QTextEdit" name="textEdit">
       <property name="geometry">
@@ -154,6 +157,9 @@
         <width>781</width>
         <height>101</height>
        </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(179, 179, 179);</string>
       </property>
      </widget>
      <widget class="QPushButton" name="pushButton_6">
@@ -250,6 +256,9 @@
         <height>491</height>
        </rect>
       </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(179, 179, 179);</string>
+      </property>
      </widget>
      <widget class="QPushButton" name="pushButton_2">
       <property name="enabled">
@@ -288,6 +297,9 @@
         <width>121</width>
         <height>471</height>
        </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(179, 179, 179);</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_5">
@@ -349,12 +361,6 @@
      <height>22</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuSettings">
-    <property name="title">
-     <string>Settings</string>
-    </property>
-   </widget>
-   <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionPrefferances">

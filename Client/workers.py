@@ -1,6 +1,4 @@
-import time
 
-import requests
 from PyQt5.QtCore import QObject, pyqtSignal
 import subprocess
 import threading

@@ -1,11 +1,13 @@
 import re
 import socket
 import sys
+import netifaces as ni
 
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QThread, QEvent, Qt
 
 from workers import *
+from custom_elements import *
 
 
 class UI(QtWidgets.QMainWindow, QObject):
@@ -17,6 +19,11 @@ class UI(QtWidgets.QMainWindow, QObject):
         self.__extract_components()
         self.__configure_signals()
 
+        self.color_map=[("red", Qt.red), ("lime", Qt.green),
+                        ("darkgreen",Qt.darkGreen), ("darkred",Qt.darkRed),
+                        ("darkmagenta",Qt.darkMagenta), ("magenta",Qt.magenta)]
+        # asocierea dintre user din chat si o culoare din paleta de culori
+        self.user_color={}
         self.can_get_msg = True
         self.stream_on = False
 
@@ -34,6 +41,7 @@ class UI(QtWidgets.QMainWindow, QObject):
         self.create_user_btn = self.page_1.findChild(QtWidgets.QPushButton, "pushButton_3")
         self.username_txt = self.page_1.findChild(QtWidgets.QLineEdit, "lineEdit")
         self.password_txt = self.page_1.findChild(QtWidgets.QLineEdit, "lineEdit_2")
+        self.password_txt.setEchoMode(QtWidgets.QLineEdit.Password)
 
         # Main Page
         self.page_2 = self.stacked_widget.widget(1)
@@ -52,11 +60,11 @@ class UI(QtWidgets.QMainWindow, QObject):
         self.chat_users_list = self.page_2.findChild(QtWidgets.QListWidget, "listWidget_2")
         self.delete_account_btn = self.page_2.findChild(QtWidgets.QPushButton, "pushButton_11")
 
-        self.preferences_act = QtWidgets.QAction("Preferences", self)
-        self.findChild(QtWidgets.QMenuBar, "menubar") \
-            .findChild(QtWidgets.QMenu, "menuSettings") \
-            .addAction(self.preferences_act)
-        print(f"Preferances= {self.preferences_act}")
+        #self.preferences_act = QtWidgets.QAction("Preferences", self)
+        #self.findChild(QtWidgets.QMenuBar, "menubar") \
+        #    .findChild(QtWidgets.QMenu, "menuSettings") \
+        #    .addAction(self.preferences_act)
+        #print(f"Preferances= {self.preferences_act}")
         # self.chat_list.addItem("chat_1")
         # self.chat_list.addItem("chat_2")
         # self.chat_list.clear()
@@ -74,11 +82,14 @@ class UI(QtWidgets.QMainWindow, QObject):
         self.delete_chat_btn.clicked.connect(self.__delete_chat_pressed)
         self.chat_list.itemClicked.connect(self.__select_chat_pressed)
         self.stream_btn.clicked.connect(self.__stream_pressed)
-        self.preferences_act.triggered.connect(self.__preferences_pressed)
         self.watch_stream_btn.clicked.connect(self.__watch_stream_pressed)
         self.chat_users_list.itemClicked.connect(self.__select_user_pressed)
         self.delete_account_btn.clicked.connect(self.__delete_account_pressed)
         self.message_box.installEventFilter(self)
+
+        # text input size config
+        self.username_txt.setMaxLength(20)
+        #self.password_txt.setMaxLength(50)
 
     def __login_pressed(self):
         username = self.username_txt.text()
@@ -141,25 +152,33 @@ class UI(QtWidgets.QMainWindow, QObject):
                 QtWidgets.QMessageBox.critical(self, "Login Error", "Incorrect password")
 
     def __create_user_pressed(self):
-        username = self.username_txt.text()
-        password = self.password_txt.text()
-        print(f"Create Account\nUsername: {username}\nPassword: {password}")
-        '''
-            Create the credentials and send them to the server
-            Check for errors
-        '''
-        self.create_user_btn.setEnabled(False)
-        self.signup_thread = QThread()
-        self.signup_worker = SignUpWorker(username, password)
+        #username = self.username_txt.text()
+        #password = self.password_txt.text()
+        create_dialog=CreateUserDialog(self)
+        if create_dialog.exec():
+            username, password, confirm_password=create_dialog.getResult()
+            if password==confirm_password:
+                print(f"Create Account\nUsername: {username}\nPassword: {password}")
+                '''
+                    Create the credentials and send them to the server
+                    Check for errors
+                '''
+                self.create_user_btn.setEnabled(False)
+                self.login_btn.setEnabled(False)
+                self.signup_thread = QThread()
+                self.signup_worker = SignUpWorker(username, password)
 
-        self.signup_worker.moveToThread(self.signup_thread)
-        self.signup_thread.started.connect(self.signup_worker.run)
-        self.signup_worker.finished.connect(self.signup_thread.quit)
-        self.signup_worker.finished.connect(self.__signup_callback)
-        self.signup_worker.finished.connect(self.signup_worker.deleteLater)
-        self.signup_thread.finished.connect(self.signup_thread.deleteLater)
-        self.signup_thread.start()
-        self.signup_thread.finished.connect(lambda: self.create_user_btn.setEnabled(True))
+                self.signup_worker.moveToThread(self.signup_thread)
+                self.signup_thread.started.connect(self.signup_worker.run)
+                self.signup_worker.finished.connect(self.signup_thread.quit)
+                self.signup_worker.finished.connect(self.__signup_callback)
+                self.signup_worker.finished.connect(self.signup_worker.deleteLater)
+                self.signup_thread.finished.connect(self.signup_thread.deleteLater)
+                self.signup_thread.start()
+                self.signup_thread.finished.connect(lambda: self.create_user_btn.setEnabled(True))
+                self.signup_thread.finished.connect(lambda: self.login_btn.setEnabled(True))
+            else:
+                QtWidgets.QMessageBox.critical(self, "INPUT ERROR", "Passwords don't match")
 
     def __signup_callback(self, res: requests.Response.__class__):
         '''
@@ -176,7 +195,8 @@ class UI(QtWidgets.QMainWindow, QObject):
 
     def __new_chat_pressed(self):
         chat_name, ok = QtWidgets.QInputDialog().getText(self, "Create chat", "Enter chat name")
-        if ok:
+
+        if ok and len(chat_name) < 20:
             print(f"chat name is {chat_name}")
             self.new_chat_btn.setEnabled(False)
             self.new_chat_thread = QThread()
@@ -192,6 +212,8 @@ class UI(QtWidgets.QMainWindow, QObject):
 
             self.new_chat_thread.start()
             self.new_chat_thread.finished.connect(lambda: self.new_chat_btn.setEnabled(True))
+        elif ok:
+            QtWidgets.QMessageBox.critical(self, "ERROR", "Chat name is too long\nMaximum length is 20 characters")
 
     def __new_chat_callback(self, res: requests.Response, chat_name: str):
         if res.status_code == 201:
@@ -219,20 +241,27 @@ class UI(QtWidgets.QMainWindow, QObject):
             updateChat()
         '''
         message = self.message_box.toPlainText()
-        sendMessage(self.credentials['username'], self.current_chat.text(), self.chat_key, message)
-        self.message_box.setText("")
-        self._update_chat()
+        if len(message) < 500:
+            sendMessage(self.credentials['username'], self.current_chat.text(), self.chat_key, message)
+            self.message_box.setText("")
+            self._update_chat()
+        else:
+            QtWidgets.QMessageBox.critical(self, "ERROR", f"Message size must be under 500 characters\n"
+                                                          f"Current Message size is {len(message)} characters")
 
     def __add_user_pressed(self):
         print("add user")
         username, ok = QtWidgets.QInputDialog().getText(self, "Add user", "Enter user name")
-        # you should check if the user exists
-        if ok:
+
+        if ok and len(username) < 20:
             try:
                 addUser(self.credentials, username, self.current_chat.text())
                 self._update_user_list()
             except:
                 QtWidgets.QMessageBox.critical(self, "Error", f"User {username} not found")
+        elif ok:
+            QtWidgets.QMessageBox.critical(self, "ERROR", f"Usernames are at max 20 characters\n"
+                                                          f"This username has {len(username)} characters")
 
     def __logout_pressed(self):
         # you could clear the text boxes
@@ -296,8 +325,8 @@ class UI(QtWidgets.QMainWindow, QObject):
         encrypted_key = getChatKey(self.credentials['username'], item.text())
         self.chat_key = decryptRSA(encrypted_key, self.credentials['PriKey'])
 
-        self._update_chat()
         self._update_user_list()
+        self._update_chat()
         self.chat_list.setEnabled(True)
 
     def __select_user_pressed(self, item):
@@ -308,7 +337,9 @@ class UI(QtWidgets.QMainWindow, QObject):
         self.stream_on = not self.stream_on
 
         if self.stream_on:
-            ip_address = socket.gethostbyname(socket.gethostname())
+            x = ni.gateways()
+            y = x['default'][2][1]
+            ip_address = ni.ifaddresses(y)[ni.AF_INET][0]['addr']
             default_server_address = f"rtmp://{ip_address}:1935/show/{self.credentials['username']}"
             input_server_address, ok = QtWidgets. \
                 QInputDialog.getText(self,
@@ -379,6 +410,7 @@ class UI(QtWidgets.QMainWindow, QObject):
         :return:
         '''
 
+
         chat_name = self.current_chat.text()
         print(f"updating chat {chat_name}")
 
@@ -388,23 +420,39 @@ class UI(QtWidgets.QMainWindow, QObject):
         date_time = x.strftime("%Y-%m-%dT%H:%M:%S")
         messages = getMessages(chat_name, date_time).json()
 
-        chat_text = ""
+        #chat_text = ""
+        msg_elem=""
         # decrypt messages
         for i in range(len(messages)):
-            chat_text += f"{messages[i]['author']}({messages[i]['date']}):" \
+            msg_date=datetime.datetime.fromisoformat(messages[i]['date'])
+            chat_text = f"{messages[i]['author']}" \
+                         f"[{msg_date.hour}:{msg_date.minute} {msg_date.day}/{msg_date.month}/{msg_date.year}]:" \
                          f" {decryptAES(messages[i]['encryptedMsg'], self.chat_key)}\n"
 
-        self.chat_browser.setText(chat_text)
+            if messages[i]['author']==self.credentials['username']:
+                msg_elem += f"<div style=\"color:blue\">{chat_text}</div>"
+            else:
+                msg_elem+= f"<div style=\"color:{self.user_color[messages[i]['author']][0]}\">{chat_text}</div>"
+        self.chat_browser.setText(msg_elem)
 
     def _update_user_list(self):
+
         # ideal ar fi sa utilizez workeri
         chat_name = self.current_chat.text()
-
+        self.user_color.clear()
         try:
             user_list = updateUserList(self.credentials, chat_name).json()
             self.chat_users_list.clear()
             for username in user_list:
-                self.chat_users_list.addItem(username)
+                item=QtWidgets.QListWidgetItem(username)
+                # verific daca eu sunt userul, daca da colorez cu albastru
+                if username==self.credentials['username']:
+                    item.setForeground(Qt.blue)
+                else:
+                    color=random.choice(self.color_map)
+                    self.user_color[username]= color
+                    item.setForeground(color[1])
+                self.chat_users_list.addItem(item)
         except:
             QtWidgets.QMessageBox.critical(self, "Error", "Something went wrong when acquiring the user list")
 

@@ -193,7 +193,7 @@ win = Window()
 win.show()
 sys.exit(app.exec())
 '''
-
+'''
 import re
 
 serv_addr="rtmp://192.168.100.21:1935/show/cineva"
@@ -203,4 +203,15 @@ fake_addr="rtmp://127.0.0.1/show/test & echo hello hack"
 client_pattern="^rtmp://\d+\.\d+\.\d+\.\d+/\w+/\w+$"
 match= re.search("^rtmp://\d+\.\d+\.\d+\.\d+:\d+/\w+/\w+$",serv_addr)
 print(match)
+'''
 
+import socket
+import netifaces as ni
+
+print(socket.gethostbyname(socket.gethostname()))
+print(socket.gethostname())
+
+x = ni.gateways()
+y = x['default'][2][1]
+ip = ni.ifaddresses(y)[ni.AF_INET][0]['addr']
+print(ip)

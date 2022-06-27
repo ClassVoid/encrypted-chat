@@ -1,9 +1,7 @@
-import os
 import time
 
-import pylivestream.api as pls
+
 import subprocess
-import threading
 #help(pls.stream_webcam)
 
 '''

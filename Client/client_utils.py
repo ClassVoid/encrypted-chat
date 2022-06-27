@@ -99,7 +99,7 @@ def sendMessage(username: str, chatName: str, chatKey: str, message: str) -> req
 
 def getMessages(chatName: str, dateTime: str) -> requests.Response.__class__:
     res = requests.get(f"{server_url}/messages?chat_name={chatName}&date_time={dateTime}")
-    print(res.json())
+    #print(res.json())
 
     return res
 

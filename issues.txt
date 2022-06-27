@@ -55,6 +55,28 @@ Questions:
 
     - Apare un deay intre sunet si imagine, este o problema semnificativa?
     
+TO_DO#2:
+    -creeaza un shell script care instaleaza automat resursele necesare
+        pentru pornirea clientului clientului, apoi un shell script care
+        porneste clinetul   DONEZO
+
+    - verifica dimensiunea text input-urilor, stabileste niste dimensiuni maxime la toate
+        ideal la client + server
+        client->username/password/chat name/message/add user/   DONEZO
+        server->create user/ add user/ create chat/ post message/
+
+    -la crearea de cont popup unde trec username-ul si parola + confirmare parola   DONEZO
+    
+    -stabileste o paleta de culori pentru dialogul din chat si implementeaza    DONEZO
+
+    -timestamp display format, ceva de genul [HH:MM DD/MM/YYYY]     DONEZO
+
+    - WRONG SERVER IP PROBLEM   DONEZO
+
+    
+
+
+    
     
 
 
