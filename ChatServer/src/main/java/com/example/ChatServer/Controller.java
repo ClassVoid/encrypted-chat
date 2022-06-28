@@ -76,6 +76,7 @@ public class Controller {
         return userService.deleteUser(username, userEncrMessage);
     }
 
+    // Validate the size of inputs
     @GetMapping("/api/chat-keys/{chatName}/{username}")
     ResponseEntity<?> getChatKey(@PathVariable("chatName") String chatName,
                                  @PathVariable("username") String username){

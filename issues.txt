@@ -73,6 +73,28 @@ TO_DO#2:
 
     - WRONG SERVER IP PROBLEM   DONEZO
 
+    - Name the app
+
+    - Modify the date when requesting messages
+
+--------------------------------------------------------
+
+    - make the app run on windows
+
+    - make the client look even more prettier       CALL IT A WIN ATM
+        -solve the text coloring problem(colors should not repeat too often) MORE COLORS PLS
+        -try to increase the font size overall      DONE
+
+    - there is a issue with the stream when you have 2 chat instances open
+        (try to stream from one, and watch from the  other)
+
+    - adauga dimensiune minima si dimensiune maxima la parola   4<=len<=50  DONEZO
+
+
+    - make it possible for the user to see his camera when streaming(use the video driver)
+
+    - fix the stream sound/video delay    
+
     
 
 

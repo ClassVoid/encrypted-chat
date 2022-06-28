@@ -101,6 +101,9 @@ public class UserService {
         if(username==null || username.length()==0)
             return new ResponseEntity<>("ERROR, INVALID USERNAME", HttpStatus.BAD_REQUEST);
 
+        if(username.length()>20)
+            return new ResponseEntity<>("ERROR, USERNAME EXCEEDS THE SIZE LIMIT", HttpStatus.INSUFFICIENT_STORAGE);
+
         Optional<UserModel> optionalUserModel=repoUserModel.findUserModelByUsername(username);
         if(optionalUserModel.isEmpty())
             return new ResponseEntity<>("ERROR, USERNAME NOT FOUND", HttpStatus.NOT_FOUND);

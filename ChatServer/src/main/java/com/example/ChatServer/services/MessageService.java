@@ -33,6 +33,9 @@ public class MessageService {
         if(chatName==null || chatName.length()==0)
             return new ResponseEntity<>("ERROR, INCORRECT CHAT NAME",HttpStatus.BAD_REQUEST);
 
+        if(chatName.length()>20)
+            return new ResponseEntity<>("ERROR, CHAT NAME EXCEEDS THE SIZE LIMIT", HttpStatus.INSUFFICIENT_STORAGE);
+
         Optional<ChatModel> optionalChatModel= repoChatModel.findChatModelByChatName(chatName);
 
         if(optionalChatModel.isPresent())
@@ -67,6 +70,8 @@ public class MessageService {
         Optional<UserModel> optionalUserModel;
         // Validate the author name and chat name
         if(messageUploadData.getEncryptedMsg()!=null || messageUploadData.getEncryptedMsg().length()>0) {
+            if(messageUploadData.getEncryptedMsg().length()>1024)
+                return new ResponseEntity<>("ERROR, MESSAGE SIZE EXCEEDS THE LIMIT", HttpStatus.INSUFFICIENT_STORAGE);
 
             if (messageUploadData.getChatName() != null || messageUploadData.getChatName().length()>0)
                 optionalChatModel = repoChatModel.findChatModelByChatName(messageUploadData.getChatName());

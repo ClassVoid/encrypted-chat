@@ -205,6 +205,7 @@ match= re.search("^rtmp://\d+\.\d+\.\d+\.\d+:\d+/\w+/\w+$",serv_addr)
 print(match)
 '''
 
+'''
 import socket
 import netifaces as ni
 
@@ -215,3 +216,8 @@ x = ni.gateways()
 y = x['default'][2][1]
 ip = ni.ifaddresses(y)[ni.AF_INET][0]['addr']
 print(ip)
+'''
+
+numbers=["a","b","c","d"]
+
+print(numbers.index("d")%2)

@@ -43,6 +43,9 @@ public class ChatService {
         // Validate data
         if(chatName!=null && chatName.length()>0 && owner!=null && owner.length()>0){
 
+            if(chatName.length()>20 || owner.length()>20)
+                return new ResponseEntity<>("ERROR, CHAT/OWNER NAME EXCEEDS THE SIZE LIMIT", HttpStatus.INSUFFICIENT_STORAGE);
+
             Optional<UserModel> optionalUserModel=repoUserModel.findUserModelByUsername(owner);
 
             if(optionalUserModel.isEmpty())
